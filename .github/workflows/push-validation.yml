@@ -3,7 +3,7 @@ name: Push validation
 on: [push]
 
 jobs:
-  lint:
+  validation:
     runs-on: ubuntu-latest
     steps:
       - name: Extract branch name
@@ -12,13 +12,11 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: ~1.20
+          go-version: ^1.20
 
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Linters
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.52.2
-          working-directory: ${{ env.BRANCH }}
+      - name: make lint
+        run: make lint
+        working-directory: ${{ env.BRANCH }}
