@@ -16,4 +16,3 @@ jobs:
 
       - name: make lint
         run: make lint
-        working-directory: system-monitoring
