@@ -27,7 +27,7 @@ func main() {
 
 	config, err := config.NewConfig(configFile)
 	if err != nil {
-		fmt.Printf("failed to read configuration file: %v\n", err)
+		fmt.Printf("Failed to read configuration file: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -47,7 +47,7 @@ func main() {
 		server.Stop()
 	}()
 
-	log.Info("Monitoring daemon is running")
+	log.Info("Monitoring service is running")
 
 	if err := server.Start(); err != nil {
 		log.Error("Start server", "error", err)

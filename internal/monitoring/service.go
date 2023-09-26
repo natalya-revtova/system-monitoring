@@ -40,20 +40,6 @@ func NewService(ctx context.Context, grabber Grabber, storage Storage, log logge
 	return &svc
 }
 
-func (s *Service) MetricsSnapshot(n int) []models.Metrics {
-	result := make([]models.Metrics, len(CollectOptions))
-
-	for i, option := range CollectOptions {
-		metrics := s.storage.Get(option, n)
-		for len(metrics) == 0 {
-			time.Sleep(time.Second)
-			metrics = s.storage.Get(option, n)
-		}
-		result[i] = calculateAverage(metrics)
-	}
-	return result
-}
-
 func (s *Service) runCollector(ctx context.Context) {
 	ticker := time.NewTicker(time.Second)
 	for {
@@ -85,6 +71,20 @@ func (s *Service) collect(results chan models.Metrics) {
 	for metrics := range results {
 		s.storage.Save(metrics)
 	}
+}
+
+func (s *Service) MetricsSnapshot(n int) []models.Metrics {
+	result := make([]models.Metrics, len(CollectOptions))
+
+	for i, option := range CollectOptions {
+		metrics := s.storage.Get(option, n)
+		for len(metrics) == 0 {
+			time.Sleep(time.Second)
+			metrics = s.storage.Get(option, n)
+		}
+		result[i] = calculateAverage(metrics)
+	}
+	return result
 }
 
 func calculateAverage(metrics []models.Metrics) models.Metrics {
