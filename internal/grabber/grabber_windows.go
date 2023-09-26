@@ -20,8 +20,8 @@ type WindowsGrabber struct {
 	log     logger.ILogger
 }
 
-func NewGrabber(options []string, log logger.ILogger) WindowsGrabber {
-	return WindowsGrabber{
+func NewGrabber(options []string, log logger.ILogger) *WindowsGrabber {
+	return &WindowsGrabber{
 		options: options,
 		log:     log,
 	}
@@ -35,7 +35,7 @@ func GetOptions(cfg config.MetricsConfig) []string {
 	return options
 }
 
-func (g WindowsGrabber) Grab(results chan models.Metrics) {
+func (g *WindowsGrabber) Grab(results chan models.Metrics) {
 	wg := &sync.WaitGroup{}
 	wg.Add(len(g.options))
 
@@ -53,7 +53,7 @@ func (g WindowsGrabber) Grab(results chan models.Metrics) {
 	wg.Wait()
 }
 
-func (g WindowsGrabber) cpuStat(results chan<- models.Metrics) {
+func (g *WindowsGrabber) cpuStat(results chan<- models.Metrics) {
 	output, err := exec.Command("top",
 		`Processor Information(_Total)\% Privileged Time`,
 		`Processor Information(_Total)\% User Time`,
@@ -79,7 +79,7 @@ func (g WindowsGrabber) cpuStat(results chan<- models.Metrics) {
 	}
 }
 
-func (g WindowsGrabber) parseValue(value string) float64 {
+func (g *WindowsGrabber) parseValue(value string) float64 {
 	parsed, err := strconv.ParseFloat(strings.Trim(value, "\""), 64)
 	if err != nil {
 		g.log.Error("Parse string value", "error", err)

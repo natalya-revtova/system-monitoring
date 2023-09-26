@@ -20,8 +20,8 @@ type LinuxGrabber struct {
 	log     logger.ILogger
 }
 
-func NewGrabber(options []string, log logger.ILogger) LinuxGrabber {
-	return LinuxGrabber{
+func NewGrabber(options []string, log logger.ILogger) *LinuxGrabber {
+	return &LinuxGrabber{
 		options: options,
 		log:     log,
 	}
@@ -41,7 +41,7 @@ func GetOptions(cfg config.MetricsConfig) []string {
 	return options
 }
 
-func (g LinuxGrabber) Grab(results chan models.Metrics) {
+func (g *LinuxGrabber) Grab(results chan models.Metrics) {
 	wg := &sync.WaitGroup{}
 	wg.Add(len(g.options))
 
@@ -63,7 +63,7 @@ func (g LinuxGrabber) Grab(results chan models.Metrics) {
 	wg.Wait()
 }
 
-func (g LinuxGrabber) loadAverage(results chan<- models.Metrics) {
+func (g *LinuxGrabber) loadAverage(results chan<- models.Metrics) {
 	data, err := os.ReadFile("/proc/loadavg")
 	if err != nil {
 		g.log.Error("Read load average file", "error", err)
@@ -85,7 +85,7 @@ func (g LinuxGrabber) loadAverage(results chan<- models.Metrics) {
 	}
 }
 
-func (g LinuxGrabber) cpuStat(results chan<- models.Metrics) {
+func (g *LinuxGrabber) cpuStat(results chan<- models.Metrics) {
 	output, err := exec.Command("top", "-b", "-n1").Output()
 	if err != nil {
 		g.log.Error("Collect CPU usage", "error", err)
@@ -116,7 +116,7 @@ func (g LinuxGrabber) cpuStat(results chan<- models.Metrics) {
 	}
 }
 
-func (g LinuxGrabber) diskStat(results chan<- models.Metrics) {
+func (g *LinuxGrabber) diskStat(results chan<- models.Metrics) {
 	const columnsInDFOutput = 7
 
 	dfOutput := g.getDiskInfo()
@@ -152,14 +152,14 @@ func (g LinuxGrabber) diskStat(results chan<- models.Metrics) {
 	}
 }
 
-func (g LinuxGrabber) calculateUsage(total, used string) float64 {
+func (g *LinuxGrabber) calculateUsage(total, used string) float64 {
 	if g.parseValue(total) == 0.0 {
 		return 0.0
 	}
 	return g.parseValue(used) * 100 / g.parseValue(total)
 }
 
-func (g LinuxGrabber) getDiskInfo() []string {
+func (g *LinuxGrabber) getDiskInfo() []string {
 	dfCmd := exec.Command("df", "-T", "-B1", "--exclude-type=tmpfs")
 	res, err := dfCmd.Output()
 	if err != nil {
@@ -169,7 +169,7 @@ func (g LinuxGrabber) getDiskInfo() []string {
 	return strings.Split(string(res), "\n")[1:]
 }
 
-func (g LinuxGrabber) getDiskInodeInfo() []string {
+func (g *LinuxGrabber) getDiskInodeInfo() []string {
 	dfCmd := exec.Command("df", "-T", "-i", "--exclude-type=tmpfs")
 	res, err := dfCmd.Output()
 	if err != nil {
@@ -179,7 +179,7 @@ func (g LinuxGrabber) getDiskInodeInfo() []string {
 	return strings.Split(string(res), "\n")[1:]
 }
 
-func (g LinuxGrabber) parseValue(value string) float64 {
+func (g *LinuxGrabber) parseValue(value string) float64 {
 	parsed, err := strconv.ParseFloat(floatFormat(value), 64)
 	if err != nil {
 		g.log.Error("Parse string value", "error", err)
