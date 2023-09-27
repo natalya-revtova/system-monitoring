@@ -13,6 +13,7 @@ func TestGet(t *testing.T) {
 		title    string
 		metrics  []models.Metrics
 		expected []models.Metrics
+		exists   bool
 		name     string
 		n        int
 	}{
@@ -32,6 +33,7 @@ func TestGet(t *testing.T) {
 				{Name: "load_avg", Groups: []models.Group{{Metrics: []models.Metric{{Name: "avg1", Value: 2}}}}},
 				{Name: "load_avg", Groups: []models.Group{{Metrics: []models.Metric{{Name: "avg1", Value: 1}}}}},
 			},
+			exists: true,
 		},
 		{
 			title: "get more values that is present in storage",
@@ -42,24 +44,32 @@ func TestGet(t *testing.T) {
 				{Name: "load_avg", Groups: []models.Group{{Metrics: []models.Metric{{Name: "avg1", Value: 2}}}}},
 				{Name: "load_avg", Groups: []models.Group{{Metrics: []models.Metric{{Name: "avg1", Value: 3}}}}},
 			},
+			exists: true,
 		},
 		{
-			title: "get values of cpu_usage that is not present in storage",
-			n:     3,
-			name:  "cpu_usage",
+			title:  "get values of cpu_usage that is not present in storage",
+			n:      3,
+			name:   "cpu_usage",
+			exists: false,
 		},
 		{
-			title: "invalid n",
-			n:     -3,
+			title:  "invalid n",
+			n:      -3,
+			exists: false,
 		},
 	}
 
 	for _, tc := range cases {
+		tc := tc
+
 		t.Run(tc.title, func(t *testing.T) {
 			storage := NewStorage()
-			storage.metrics[tc.name] = tc.metrics
+			if len(tc.metrics) != 0 {
+				storage.metrics[tc.name] = tc.metrics
+			}
 
-			actual := storage.Get(tc.name, tc.n)
+			actual, ok := storage.Get(tc.name, tc.n)
+			require.Equal(t, tc.exists, ok)
 			require.Equal(t, tc.expected, actual)
 		})
 	}

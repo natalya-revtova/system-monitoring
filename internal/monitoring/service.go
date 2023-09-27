@@ -10,8 +10,6 @@ import (
 	"github.com/natalya-revtova/system-monitoring/internal/models"
 )
 
-var CollectOptions = []string{models.LoadAverageOption, models.CPUStatOption, models.DiskStatOption}
-
 //go:generate go run github.com/vektra/mockery/v2@v2.33.0 --name=Grabber
 type Grabber interface {
 	Grab(results chan models.Metrics)
@@ -19,20 +17,22 @@ type Grabber interface {
 
 //go:generate go run github.com/vektra/mockery/v2@v2.33.0 --name=Storage
 type Storage interface {
-	Get(name string, n int) []models.Metrics
+	Get(name string, n int) ([]models.Metrics, bool)
 	Save(metrics models.Metrics)
 }
 
 type Service struct {
 	grabber Grabber
 	storage Storage
+	options []string
 	log     logger.ILogger
 }
 
-func NewService(ctx context.Context, grabber Grabber, storage Storage, log logger.ILogger) *Service {
+func NewService(ctx context.Context, grabber Grabber, storage Storage, options []string, log logger.ILogger) *Service {
 	svc := Service{
 		grabber: grabber,
 		storage: storage,
+		options: options,
 		log:     log,
 	}
 
@@ -74,13 +74,17 @@ func (s *Service) collect(results chan models.Metrics) {
 }
 
 func (s *Service) MetricsSnapshot(n int) []models.Metrics {
-	result := make([]models.Metrics, len(CollectOptions))
+	result := make([]models.Metrics, len(s.options))
 
-	for i, option := range CollectOptions {
-		metrics := s.storage.Get(option, n)
+	for i, option := range s.options {
+		metrics, ok := s.storage.Get(option, n)
+		if !ok {
+			continue
+		}
+
 		for len(metrics) == 0 {
 			time.Sleep(time.Second)
-			metrics = s.storage.Get(option, n)
+			metrics, _ = s.storage.Get(option, n)
 		}
 		result[i] = calculateAverage(metrics)
 	}

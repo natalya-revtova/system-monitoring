@@ -36,10 +36,11 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
 
-	grabber := grabber.NewGrabber(grabber.GetOptions(config.Metrics), log)
+	collectOptions := grabber.GetOptions(config.Metrics)
+	grabber := grabber.NewGrabber(collectOptions, log)
 	storage := storage.NewStorage()
 
-	svc := monitoring.NewService(ctx, grabber, storage, log)
+	svc := monitoring.NewService(ctx, grabber, storage, collectOptions, log)
 	server := server.NewServer(config.Server, svc, log)
 
 	go func() {

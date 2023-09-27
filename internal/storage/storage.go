@@ -32,13 +32,21 @@ func (s *Storage) Save(metrics models.Metrics) {
 	s.metrics[metrics.Name] = append(s.metrics[metrics.Name], metrics)
 }
 
-func (s *Storage) Get(name string, n int) []models.Metrics {
+func (s *Storage) Get(name string, n int) ([]models.Metrics, bool) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 
-	mlen := len(s.metrics[name])
-	if mlen < n || n <= 0 {
-		return nil
+	if n <= 0 {
+		return nil, false
 	}
-	return s.metrics[name][mlen-n:]
+
+	if _, ok := s.metrics[name]; !ok {
+		return nil, false
+	}
+
+	mlen := len(s.metrics[name])
+	if mlen < n {
+		return nil, true
+	}
+	return s.metrics[name][mlen-n:], true
 }

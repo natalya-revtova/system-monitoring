@@ -13,10 +13,14 @@ type Storage struct {
 }
 
 // Get provides a mock function with given fields: name, n
-func (_m *Storage) Get(name string, n int) []models.Metrics {
+func (_m *Storage) Get(name string, n int) ([]models.Metrics, bool) {
 	ret := _m.Called(name, n)
 
 	var r0 []models.Metrics
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(string, int) ([]models.Metrics, bool)); ok {
+		return rf(name, n)
+	}
 	if rf, ok := ret.Get(0).(func(string, int) []models.Metrics); ok {
 		r0 = rf(name, n)
 	} else {
@@ -25,7 +29,13 @@ func (_m *Storage) Get(name string, n int) []models.Metrics {
 		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(string, int) bool); ok {
+		r1 = rf(name, n)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
 }
 
 // Save provides a mock function with given fields: metrics

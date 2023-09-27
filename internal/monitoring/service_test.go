@@ -125,7 +125,7 @@ func TestService(t *testing.T) {
 
 	grabberMock.On("Grab", mock.Anything).Return().Times(3)
 
-	_ = NewService(ctx, grabberMock, storageMock, logger.NewMock())
+	_ = NewService(ctx, grabberMock, storageMock, []string{models.DiskStatOption}, logger.NewMock())
 	<-ctx.Done()
 }
 
@@ -158,9 +158,9 @@ func TestAverageCalculation(t *testing.T) {
 		storage: storageMock,
 	}
 
-	CollectOptions = []string{models.DiskStatOption}
-	storageMock.On("Get", models.DiskStatOption, 2).Return(nil).Once()
-	storageMock.On("Get", models.DiskStatOption, 2).Return(metrics).Once()
+	svc.options = []string{models.DiskStatOption}
+	storageMock.On("Get", models.DiskStatOption, 2).Return(nil, true).Once()
+	storageMock.On("Get", models.DiskStatOption, 2).Return(metrics, true).Once()
 
 	actual := svc.MetricsSnapshot(2)
 	require.Equal(t, summary, actual)
