@@ -1,0 +1,11 @@
+[server]
+host = "127.0.0.1"
+port = 50051
+
+[logger]
+level = "info"
+
+[metrics]
+load_avg = true
+cpu_usage = true
+disk_info = true
